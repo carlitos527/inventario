@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { supabase, type Producto, type Categoria, type Cliente } from '@/lib/supabase';
+import { supabase, type Producto, type Categoria, type Cliente, type ConfigEmpresa, type Pedido, type DetallePedido } from '@/lib/supabase';
 import { useAuth } from '@/context/AuthContext';
 import { navigate } from '@/lib/router';
 import { formatCurrency } from '@/lib/utils';
@@ -15,6 +15,7 @@ import {
   FileSpreadsheet,
   ArrowLeft,
   User,
+  CheckCircle2,
 } from 'lucide-react';
 
 export default function Facturacion() {
@@ -29,18 +30,41 @@ export default function Facturacion() {
   const [showProductPicker, setShowProductPicker] = useState(false);
   const [showClientPicker, setShowClientPicker] = useState(false);
   const [search, setSearch] = useState('');
-  const [numeroFactura] = useState(() => `F-${Date.now().toString().slice(-6)}`);
+  const [config, setConfig] = useState<ConfigEmpresa | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [savedFactura, setSavedFactura] = useState(false);
+  const numeroFactura = `F-${Date.now().toString().slice(-8)}`;
 
   async function loadData() {
     setLoading(true);
-    const [{ data: prods }, { data: cats }, { data: clis }] = await Promise.all([
+    const [{ data: prods }, { data: cats }, { data: clis }, { data: cfg }] = await Promise.all([
       supabase.from('productos').select('*').eq('activo', true).order('nombre'),
       supabase.from('categorias').select('*').order('nombre'),
       supabase.from('clientes').select('*').order('nombre'),
+      supabase.from('configuracion_empresa').select('*').eq('id', 1).maybeSingle(),
     ]);
     setProductos((prods as Producto[]) || []);
     setCategorias((cats as Categoria[]) || []);
     setClientes((clis as Cliente[]) || []);
+    setConfig(cfg as ConfigEmpresa | null);
+
+    const pedidoId = sessionStorage.getItem('factura_pedido');
+    if (pedidoId) {
+      sessionStorage.removeItem('factura_pedido');
+      const { data: ped } = await supabase.from('pedidos').select('*').eq('id', Number(pedidoId)).maybeSingle();
+      const pedido = ped as Pedido | null;
+      if (pedido) {
+        if (pedido.cliente_nombre) setClienteManual(pedido.cliente_nombre);
+        const { data: dets } = await supabase.from('detalle_pedido').select('*').eq('pedido_id', pedido.id);
+        const detalles = (dets as DetallePedido[]) || [];
+        const newItems: FacturaItem[] = [];
+        for (const d of detalles) {
+          const prod = (prods as Producto[])?.find((p) => p.id === d.producto_id);
+          if (prod) newItems.push({ producto: prod, cantidad: Number(d.cantidad), precio: Number(d.precio_unitario) });
+        }
+        setItems(newItems);
+      }
+    }
     setLoading(false);
   }
 
@@ -94,6 +118,44 @@ export default function Facturacion() {
 
   const perfilNombre = perfil ? `${perfil.nombre} ${perfil.apellido}` : 'Usuario';
 
+  async function handleSaveAndPDF() {
+    setSaving(true);
+    const clienteDoc = clienteSeleccionado?.documento || '';
+    const clienteTel = clienteSeleccionado?.telefono || '';
+    const clienteDir = clienteSeleccionado?.direccion || '';
+    const pedidoIdStr = sessionStorage.getItem('factura_pedido');
+    const pedidoId = pedidoIdStr ? Number(pedidoIdStr) : null;
+
+    const { data: facturaRow } = await supabase.from('facturas').insert({
+      numero: numeroFactura,
+      pedido_id: pedidoId,
+      cliente_nombre: clienteNombre,
+      cliente_documento: clienteDoc,
+      cliente_telefono: clienteTel,
+      cliente_direccion: clienteDir,
+      subtotal,
+      iva,
+      total,
+      estado: 'emitida',
+      creado_por: perfil?.id || null,
+    }).select().single();
+
+    const facturaId = facturaRow?.id;
+
+    if (facturaId) {
+      await supabase.from('asientos_contables').insert([
+        { descripcion: `Venta ${numeroFactura}`, cuenta_codigo: '1100', cuenta_nombre: 'Caja', debito: total, credito: 0, factura_id: facturaId, pedido_id: pedidoId, creado_por: perfil?.id || null },
+        { descripcion: `Venta ${numeroFactura}`, cuenta_codigo: '4100', cuenta_nombre: 'Ingresos por ventas', debito: 0, credito: subtotal, factura_id: facturaId, pedido_id: pedidoId, creado_por: perfil?.id || null },
+        { descripcion: `IVA ${numeroFactura}`, cuenta_codigo: '2100', cuenta_nombre: 'IVA por pagar', debito: 0, credito: iva, factura_id: facturaId, pedido_id: pedidoId, creado_por: perfil?.id || null },
+      ]);
+    }
+
+    exportFacturaPDF(items, clienteNombre, numeroFactura, perfilNombre, config);
+    setSaving(false);
+    setSavedFactura(true);
+    setTimeout(() => setSavedFactura(false), 4000);
+  }
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
@@ -107,7 +169,7 @@ export default function Facturacion() {
       {/* Header */}
       <div className="flex items-center gap-3">
         <button
-          onClick={() => navigate('inicio')}
+          onClick={() => navigate('admin')}
           className="p-2 rounded-xl hover:bg-slate-100 text-slate-500"
         >
           <ArrowLeft className="w-5 h-5" />
@@ -277,23 +339,32 @@ export default function Facturacion() {
         )}
       </div>
 
-      {/* Export buttons */}
+      {/* Action buttons */}
       {items.length > 0 && (
-        <div className="flex gap-3">
-          <button
-            onClick={() => exportFacturaPDF(items, clienteNombre, numeroFactura, perfilNombre)}
-            className="flex-1 flex items-center justify-center gap-2 bg-gradient-to-r from-rose-500 to-orange-500 text-white font-semibold py-3 rounded-xl shadow-lg hover:shadow-xl transition-all"
-          >
-            <FileText className="w-5 h-5" />
-            Exportar PDF
-          </button>
-          <button
-            onClick={() => exportFacturaExcel(items, clienteNombre, numeroFactura, perfilNombre)}
-            className="flex-1 flex items-center justify-center gap-2 bg-gradient-to-r from-emerald-500 to-green-500 text-white font-semibold py-3 rounded-xl shadow-lg hover:shadow-xl transition-all"
-          >
-            <FileSpreadsheet className="w-5 h-5" />
-            Exportar Excel
-          </button>
+        <div className="space-y-3">
+          {savedFactura && (
+            <div className="flex items-center gap-2 text-sm text-emerald-600 bg-emerald-50 px-4 py-2.5 rounded-xl">
+              <CheckCircle2 className="w-4 h-4" />
+              Factura guardada y asientos contables creados
+            </div>
+          )}
+          <div className="flex gap-3">
+            <button
+              onClick={handleSaveAndPDF}
+              disabled={saving}
+              className="flex-1 flex items-center justify-center gap-2 bg-gradient-to-r from-rose-500 to-orange-500 text-white font-semibold py-3 rounded-xl shadow-lg hover:shadow-xl transition-all disabled:opacity-60"
+            >
+              {saving ? <Loader2 className="w-5 h-5 animate-spin" /> : <FileText className="w-5 h-5" />}
+              Guardar y PDF
+            </button>
+            <button
+              onClick={() => exportFacturaExcel(items, clienteNombre, numeroFactura, perfilNombre)}
+              className="flex-1 flex items-center justify-center gap-2 bg-gradient-to-r from-emerald-500 to-green-500 text-white font-semibold py-3 rounded-xl shadow-lg hover:shadow-xl transition-all"
+            >
+              <FileSpreadsheet className="w-5 h-5" />
+              Excel
+            </button>
+          </div>
         </div>
       )}
 

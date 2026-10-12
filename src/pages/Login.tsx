@@ -24,7 +24,7 @@ export default function Login() {
 
       await supabase.auth.getSession();
 
-      navigate('inicio');
+      navigate('admin');
       window.location.reload();
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Error al iniciar sesión';

@@ -32,7 +32,7 @@ export default function Registro() {
       if (signUpError) throw signUpError;
 
       if (data.session) {
-        navigate('inicio');
+        navigate('admin');
         window.location.reload();
       } else {
         setNeedsConfirmation(true);

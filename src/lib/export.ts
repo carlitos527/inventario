@@ -88,21 +88,29 @@ export function exportFacturaPDF(
   items: FacturaItem[],
   cliente: string,
   numeroFactura: string,
-  perfilNombre: string
+  perfilNombre: string,
+  empresa?: { nombre: string; nit: string; direccion: string; telefono: string; logo_url: string } | null
 ) {
   const doc = new jsPDF();
 
   const margin = 14;
   let y = 20;
 
+  const empNombre = empresa?.nombre || 'Stockly';
+  const empNit = empresa?.nit || '';
+  const empDir = empresa?.direccion || '';
+  const empTel = empresa?.telefono || '';
+
   doc.setFontSize(24);
   doc.setTextColor(14, 165, 233);
-  doc.text('Stockly', margin, y);
+  doc.text(empNombre, margin, y);
 
   doc.setFontSize(9);
   doc.setTextColor(100, 116, 139);
   y += 6;
-  doc.text('Sistema de Inventario', margin, y);
+  if (empNit) doc.text(`NIT/RNC: ${empNit}`, margin, y);
+  if (empDir) { y += 5; doc.text(empDir, margin, y); }
+  if (empTel) { y += 5; doc.text(`Tel: ${empTel}`, margin, y); }
 
   doc.setFontSize(14);
   doc.setTextColor(15, 23, 42);
@@ -120,6 +128,10 @@ export function exportFacturaPDF(
 
   y += 6;
   doc.text(`Vendedor: ${perfilNombre}`, margin, y);
+  if (empresa?.nit) {
+    y += 5;
+    doc.text(`Empresa: ${empNombre} - NIT: ${empNit}`, margin, y);
+  }
 
   y += 8;
 

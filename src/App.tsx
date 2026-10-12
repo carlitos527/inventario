@@ -1,19 +1,32 @@
 import { useEffect, useState } from 'react';
 import { AuthProvider, useAuth } from '@/context/AuthContext';
-import { parseHash, navigate, type Route } from '@/lib/router';
+import { CartProvider } from '@/context/CartContext';
+import { parseHash, navigate, type Route, PUBLIC_ROUTES } from '@/lib/router';
 import Layout from '@/components/Layout';
+import Catalogo from '@/pages/Catalogo';
+import Carrito from '@/pages/Carrito';
 import Registro from '@/pages/Registro';
 import Login from '@/pages/Login';
-import Inicio from '@/pages/Inicio';
+import Admin from '@/pages/Admin';
 import Productos from '@/pages/Productos';
 import ProductoNuevo from '@/pages/ProductoNuevo';
 import Movimientos from '@/pages/Movimientos';
 import Categorias from '@/pages/Categorias';
 import Clientes from '@/pages/Clientes';
-import Perfil from '@/pages/Perfil';
+import Pedidos from '@/pages/Pedidos';
+import PedidoDetalle from '@/pages/PedidoDetalle';
+import Motos from '@/pages/Motos';
 import Facturacion from '@/pages/Facturacion';
+import Contabilidad from '@/pages/Contabilidad';
+import Configuracion from '@/pages/Configuracion';
+import Perfil from '@/pages/Perfil';
 
-const AUTH_ROUTES: Route[] = ['registro', 'login'];
+const AUTH_ROUTES: Route[] = ['login', 'registro'];
+const ADMIN_ROUTES: Route[] = [
+  'admin', 'productos', 'productos-nuevo', 'movimientos', 'categorias',
+  'clientes', 'pedidos', 'pedido-detalle', 'motos', 'facturacion',
+  'contabilidad', 'configuracion', 'perfil',
+];
 
 function AppContent() {
   const { session, loading } = useAuth();
@@ -33,39 +46,47 @@ function AppContent() {
     );
   }
 
-  const isAuthRoute = AUTH_ROUTES.includes(route);
+  // Public pages (no auth required)
+  if (route === 'catalogo') return <Catalogo />;
+  if (route === 'carrito') return <Carrito />;
 
-  // Not logged in → only auth pages
-  if (!session) {
-    if (route === 'registro') return <Registro />;
+  // Auth pages
+  if (route === 'login') {
+    if (session) { navigate('admin'); return null; }
     return <Login />;
   }
-
-  // Logged in → redirect away from auth pages
-  if (isAuthRoute) {
-    navigate('inicio');
-    return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-        <div className="w-10 h-10 border-4 border-sky-200 border-t-sky-500 rounded-full animate-spin" />
-      </div>
-    );
+  if (route === 'registro') {
+    if (session) { navigate('admin'); return null; }
+    return <Registro />;
   }
 
-  // App pages
-  const pages: Record<Exclude<Route, 'registro' | 'login'>, React.ReactNode> = {
-    inicio: <Inicio />,
+  // Admin pages - require auth
+  if (!session) {
+    navigate('catalogo');
+    return null;
+  }
+
+  const pages: Partial<Record<Route, React.ReactNode>> = {
+    admin: <Admin />,
     productos: <Productos />,
     'productos-nuevo': <ProductoNuevo />,
     movimientos: <Movimientos />,
     categorias: <Categorias />,
     clientes: <Clientes />,
+    pedidos: <Pedidos />,
+    'pedido-detalle': <PedidoDetalle />,
+    motos: <Motos />,
     facturacion: <Facturacion />,
+    contabilidad: <Contabilidad />,
+    configuracion: <Configuracion />,
     perfil: <Perfil />,
   };
 
+  const content = pages[route] ?? <Admin />;
+
   return (
-    <Layout current={route}>
-      {pages[route as Exclude<Route, 'registro' | 'login'>] ?? <Inicio />}
+    <Layout current={ADMIN_ROUTES.includes(route) ? route : 'admin'}>
+      {content}
     </Layout>
   );
 }
@@ -73,7 +94,9 @@ function AppContent() {
 export default function App() {
   return (
     <AuthProvider>
-      <AppContent />
+      <CartProvider>
+        <AppContent />
+      </CartProvider>
     </AuthProvider>
   );
 }

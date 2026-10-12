@@ -38,7 +38,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         apellido,
         correo,
         usuario,
-        rol: 'usuario',
+        rol: 'vendedor',
         estado: 'activo',
       });
     }

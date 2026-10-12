@@ -11,16 +11,26 @@ import {
   Boxes,
   FileText,
   Users,
+  ShoppingCart,
+  Bike,
+  Calculator,
+  Settings,
 } from 'lucide-react';
 
-const NAV_ITEMS: { route: Route; label: string; icon: typeof Home }[] = [
-  { route: 'inicio', label: 'Inicio', icon: Home },
-  { route: 'productos', label: 'Productos', icon: Package },
-  { route: 'movimientos', label: 'Movimientos', icon: ArrowLeftRight },
-  { route: 'categorias', label: 'Categorías', icon: Tags },
-  { route: 'clientes', label: 'Clientes', icon: Users },
-  { route: 'facturacion', label: 'Facturación', icon: FileText },
-  { route: 'perfil', label: 'Perfil', icon: UserIcon },
+type NavItem = { route: Route; label: string; icon: typeof Home; roles: string[] };
+
+const NAV_ITEMS: NavItem[] = [
+  { route: 'admin', label: 'Inicio', icon: Home, roles: ['webmaster', 'admin', 'vendedor'] },
+  { route: 'pedidos', label: 'Pedidos', icon: ShoppingCart, roles: ['webmaster', 'admin', 'vendedor'] },
+  { route: 'productos', label: 'Productos', icon: Package, roles: ['webmaster', 'admin', 'vendedor'] },
+  { route: 'movimientos', label: 'Movimientos', icon: ArrowLeftRight, roles: ['webmaster', 'admin'] },
+  { route: 'categorias', label: 'Categorías', icon: Tags, roles: ['webmaster', 'admin'] },
+  { route: 'clientes', label: 'Clientes', icon: Users, roles: ['webmaster', 'admin', 'vendedor'] },
+  { route: 'motos', label: 'Taller motos', icon: Bike, roles: ['webmaster', 'admin', 'vendedor'] },
+  { route: 'facturacion', label: 'Facturación', icon: FileText, roles: ['webmaster', 'admin', 'vendedor'] },
+  { route: 'contabilidad', label: 'Contabilidad', icon: Calculator, roles: ['webmaster', 'admin'] },
+  { route: 'configuracion', label: 'Configuración', icon: Settings, roles: ['webmaster'] },
+  { route: 'perfil', label: 'Perfil', icon: UserIcon, roles: ['webmaster', 'admin', 'vendedor'] },
 ];
 
 export default function Sidebar({ current }: { current: Route }) {
@@ -29,13 +39,15 @@ export default function Sidebar({ current }: { current: Route }) {
   const fullName = perfil ? `${perfil.nombre} ${perfil.apellido}` : 'Usuario';
   const initials = perfil ? getInitials(perfil.nombre, perfil.apellido) : '?';
   const avatarColor = perfil ? getAvatarColor(perfil.usuario || perfil.correo) : 'bg-slate-400';
+  const rol = perfil?.rol || 'vendedor';
+  const items = NAV_ITEMS.filter((item) => item.roles.includes(rol));
 
   function handleNav(route: Route) {
     navigate(route);
   }
 
   function handleSignOut() {
-    signOut().then(() => navigate('login'));
+    signOut().then(() => navigate('catalogo'));
   }
 
   return (
@@ -49,7 +61,7 @@ export default function Sidebar({ current }: { current: Route }) {
             </div>
             <div>
               <h1 className="text-lg font-bold text-slate-800 leading-none">Stockly</h1>
-              <p className="text-xs text-slate-400 mt-0.5">Inventario social</p>
+              <p className="text-xs text-slate-400 mt-0.5 capitalize">{rol}</p>
             </div>
           </div>
         </div>
@@ -74,7 +86,7 @@ export default function Sidebar({ current }: { current: Route }) {
 
         {/* Nav */}
         <nav className="flex-1 px-4 space-y-1 overflow-y-auto">
-          {NAV_ITEMS.map((item) => {
+          {items.map((item) => {
             const Icon = item.icon;
             const active = current === item.route ||
               (item.route === 'productos' && current === 'productos-nuevo');
@@ -94,6 +106,14 @@ export default function Sidebar({ current }: { current: Route }) {
               </button>
             );
           })}
+          {/* Catalog link */}
+          <button
+            onClick={() => navigate('catalogo')}
+            className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-slate-400 hover:bg-slate-50 hover:text-slate-600 transition-all mt-2 pt-3 border-t border-slate-50"
+          >
+            <Boxes className="w-5 h-5 flex-shrink-0" />
+            <span>Ver tienda</span>
+          </button>
         </nav>
 
         {/* Sign out */}
@@ -110,7 +130,7 @@ export default function Sidebar({ current }: { current: Route }) {
 
       {/* Mobile bottom bar */}
       <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 flex justify-around items-center z-30 pb-safe">
-        {NAV_ITEMS.map((item) => {
+        {items.slice(0, 5).map((item) => {
           const Icon = item.icon;
           const active = current === item.route ||
             (item.route === 'productos' && current === 'productos-nuevo');
@@ -118,12 +138,12 @@ export default function Sidebar({ current }: { current: Route }) {
             <button
               key={item.route}
               onClick={() => handleNav(item.route)}
-              className={`flex flex-col items-center gap-1 py-2.5 px-3 transition-colors ${
+              className={`flex flex-col items-center gap-1 py-2.5 px-2 transition-colors ${
                 active ? 'text-sky-600' : 'text-slate-400'
               }`}
             >
               <Icon className="w-5 h-5" />
-              <span className="text-[10px] font-medium">{item.label}</span>
+              <span className="text-[9px] font-medium">{item.label}</span>
             </button>
           );
         })}
