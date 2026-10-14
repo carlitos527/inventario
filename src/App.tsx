@@ -20,12 +20,14 @@ import Facturacion from '@/pages/Facturacion';
 import Contabilidad from '@/pages/Contabilidad';
 import Configuracion from '@/pages/Configuracion';
 import Perfil from '@/pages/Perfil';
+import GestionUsuarios from '@/pages/GestionUsuarios'; // 👈 NUEVO IMPORT
 
 const AUTH_ROUTES: Route[] = ['login', 'registro'];
 const ADMIN_ROUTES: Route[] = [
   'admin', 'productos', 'productos-nuevo', 'movimientos', 'categorias',
   'clientes', 'pedidos', 'pedido-detalle', 'motos', 'facturacion',
   'contabilidad', 'configuracion', 'perfil',
+  'usuarios', // 👈 NUEVA RUTA
 ];
 
 function AppContent() {
@@ -46,11 +48,9 @@ function AppContent() {
     );
   }
 
-  // Public pages (no auth required)
   if (route === 'catalogo') return <Catalogo />;
   if (route === 'carrito') return <Carrito />;
 
-  // Auth pages
   if (route === 'login') {
     if (session) { navigate('admin'); return null; }
     return <Login />;
@@ -60,7 +60,6 @@ function AppContent() {
     return <Registro />;
   }
 
-  // Admin pages - require auth
   if (!session) {
     navigate('catalogo');
     return null;
@@ -80,6 +79,7 @@ function AppContent() {
     contabilidad: <Contabilidad />,
     configuracion: <Configuracion />,
     perfil: <Perfil />,
+    usuarios: <GestionUsuarios />, // 👈 NUEVA PÁGINA
   };
 
   const content = pages[route] ?? <Admin />;
