@@ -103,17 +103,7 @@ export default function Login() {
             </button>
           </form>
 
-          <div className="mt-6 text-center text-sm text-slate-500">
-            <p>
-              ¿No tienes cuenta?{' '}
-              <button
-                onClick={() => navigate('registro')}
-                className="text-sky-600 font-semibold hover:underline"
-              >
-                Regístrate
-              </button>
-            </p>
-          </div>
+          
         </div>
       </div>
     </div>
