@@ -38,7 +38,7 @@ export default function Catalogo() {
     return matchSearch && matchCat;
   });
 
-  const empresaNombre = config?.nombre || 'Stockly';
+  const empresaNombre = config?.nombre || 'LECOR';
 
   return (
     <div className="min-h-screen bg-slate-50">
