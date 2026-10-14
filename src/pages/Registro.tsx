@@ -54,7 +54,7 @@ export default function Registro() {
           <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-sky-500 to-emerald-500 shadow-lg mb-4">
             <Boxes className="w-9 h-9 text-white" />
           </div>
-          <h1 className="text-2xl font-bold text-slate-800">Stockly</h1>
+          <h1 className="text-2xl font-bold text-slate-800">LECOR</h1>
           <p className="text-slate-400 text-sm mt-1">Crea tu cuenta de inventario</p>
         </div>
 

@@ -62,7 +62,7 @@ export default function Sidebar({ current }: { current: Route }) {
               <Boxes className="w-6 h-6 text-white" />
             </div>
             <div>
-              <h1 className="text-lg font-bold text-slate-800 leading-none">Stockly</h1>
+              <h1 className="text-lg font-bold text-slate-800 leading-none">LECOR</h1>
               <p className="text-xs text-slate-400 mt-0.5 capitalize">{rol}</p>
             </div>
           </div>
