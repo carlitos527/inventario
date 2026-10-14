@@ -4,7 +4,7 @@ import { useCart } from '@/context/CartContext';
 import { useAuth } from '@/context/AuthContext';
 import { navigate } from '@/lib/router';
 import { formatCurrency } from '@/lib/utils';
-import { Boxes, ShoppingCart, Search, Plus, Minus, LogIn, Package } from 'lucide-react';
+import { Boxes, ShoppingCart, Search, Plus, LogIn, Package } from 'lucide-react';
 
 export default function Catalogo() {
   const { addItem } = useCart();
@@ -126,8 +126,25 @@ export default function Catalogo() {
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
             {filtered.map((p) => (
               <div key={p.id} className="bg-white rounded-2xl border border-slate-100 p-4 flex flex-col">
-                <div className="w-full aspect-square rounded-xl bg-slate-50 flex items-center justify-center mb-3">
-                  <Package className="w-10 h-10 text-slate-300" />
+                {/* 👇 IMAGEN DEL PRODUCTO (o icono si no tiene) */}
+                <div className="w-full aspect-square rounded-xl bg-slate-50 flex items-center justify-center mb-3 overflow-hidden">
+                  {p.imagen_url ? (
+                    <img
+                      src={p.imagen_url}
+                      alt={p.nombre}
+                      className="w-full h-full object-cover"
+                      loading="lazy"
+                      onError={(e) => {
+                        (e.currentTarget as HTMLImageElement).style.display = 'none';
+                        const next = e.currentTarget.nextElementSibling as HTMLElement | null;
+                        if (next) next.style.display = 'block';
+                      }}
+                    />
+                  ) : null}
+                  <Package
+                    className="w-10 h-10 text-slate-300"
+                    style={{ display: p.imagen_url ? 'none' : 'block' }}
+                  />
                 </div>
                 <h3 className="font-semibold text-slate-800 text-sm leading-tight line-clamp-2">{p.nombre}</h3>
                 {p.descripcion && (
