@@ -37,6 +37,7 @@ export type Producto = {
   stock_minimo: number;
   unidad: string;
   categoria_id: number | null;
+  imagen_url: string | null; // 👈 ÚNICA LÍNEA NUEVA
   creado_por: string | null;
   creado_en: string;
   activo: boolean;
