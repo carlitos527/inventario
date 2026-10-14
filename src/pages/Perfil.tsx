@@ -5,13 +5,14 @@ import { getAvatarColor, getInitials, formatDate } from '@/lib/utils';
 import { Save, Loader2, Mail, User as UserIcon, Calendar, Shield } from 'lucide-react';
 
 export default function Perfil() {
-  const { perfil, user, refreshPerfil } = useAuth();
+  // 👇 Agregamos "loading" al destructuring
+  const { perfil, user, refreshPerfil, loading } = useAuth();
   const [nombre, setNombre] = useState(perfil?.nombre ?? '');
   const [apellido, setApellido] = useState(perfil?.apellido ?? '');
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
 
-  // ¡AQUÍ ESTÁ LA MAGIA! Sincroniza los inputs cuando el perfil cargue de Supabase
+  // Sincroniza los inputs cuando el perfil cargue de Supabase
   useEffect(() => {
     if (perfil) {
       setNombre(perfil.nombre ?? '');
@@ -19,10 +20,20 @@ export default function Perfil() {
     }
   }, [perfil]);
 
-  if (!perfil) {
+  // 👇 Mientras el AuthContext esté cargando, mostramos el spinner
+  if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
         <Loader2 className="w-8 h-8 text-sky-500 animate-spin" />
+      </div>
+    );
+  }
+
+  // 👇 Si terminó de cargar y NO hay perfil, mostramos un mensaje claro
+  if (!perfil) {
+    return (
+      <div className="text-center py-20 text-slate-400">
+        No se encontró tu perfil. Contacta al administrador.
       </div>
     );
   }
