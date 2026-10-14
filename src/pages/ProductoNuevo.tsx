@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { supabase, type Categoria } from '@/lib/supabase';
 import { useAuth } from '@/context/AuthContext';
 import { navigate } from '@/lib/router';
-import { ArrowLeft, Save, Loader2, Package } from 'lucide-react';
+import { ArrowLeft, Save, Loader2, Package, Image as ImageIcon } from 'lucide-react';
 
 const UNIDADES = ['unidad', 'kg', 'lb', 'litro', 'caja', 'paquete'];
 
@@ -16,6 +16,7 @@ export default function ProductoNuevo() {
   const [unidad, setUnidad] = useState('unidad');
   const [categoriaId, setCategoriaId] = useState('');
   const [categorias, setCategorias] = useState<Categoria[]>([]);
+  const [imagenUrl, setImagenUrl] = useState(''); // 👈 NUEVO
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
 
@@ -39,6 +40,7 @@ export default function ProductoNuevo() {
         stock_minimo: Number(stockMinimo) || 5,
         unidad,
         categoria_id: categoriaId ? Number(categoriaId) : null,
+        imagen_url: imagenUrl.trim() || null, // 👈 NUEVO
         creado_por: user?.id,
       });
 
@@ -79,6 +81,41 @@ export default function ProductoNuevo() {
             {error}
           </div>
         )}
+
+        {/* 👇 NUEVO: Campo de imagen con vista previa */}
+        <div>
+          <label className="block text-sm font-medium text-slate-600 mb-1.5">
+            Imagen del producto (URL)
+          </label>
+          <div className="relative">
+            <ImageIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+            <input
+              type="url"
+              value={imagenUrl}
+              onChange={(e) => setImagenUrl(e.target.value)}
+              className={`${inputClass} pl-10`}
+              placeholder="https://ejemplo.com/imagen.jpg"
+            />
+          </div>
+          {imagenUrl && (
+            <div className="mt-3 flex items-start gap-3">
+              <div className="w-24 h-24 rounded-xl overflow-hidden border border-slate-200 bg-slate-50 flex-shrink-0">
+                <img
+                  src={imagenUrl}
+                  alt="Vista previa"
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    (e.currentTarget as HTMLImageElement).src = '';
+                    (e.currentTarget as HTMLImageElement).alt = 'Imagen inválida';
+                  }}
+                />
+              </div>
+              <p className="text-xs text-slate-400 mt-2">
+                Vista previa de la imagen. Si no se ve, verifica que la URL sea válida (debe terminar en .jpg, .png, .webp, etc.)
+              </p>
+            </div>
+          )}
+        </div>
 
         <div>
           <label className="block text-sm font-medium text-slate-600 mb-1.5">Nombre *</label>
