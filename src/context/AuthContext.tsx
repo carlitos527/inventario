@@ -20,35 +20,50 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   async function ensurePerfil(u: User) {
-    const { data: existing } = await supabase
-      .from('perfiles')
-      .select('id')
-      .eq('id', u.id)
-      .maybeSingle();
+    try {
+      // 1. Intentar obtener el perfil existente
+      const { data: existing, error: selectError } = await supabase
+        .from('perfiles')
+        .select('id')
+        .eq('id', u.id)
+        .maybeSingle();
 
-    if (!existing) {
-      const nombre = (u.user_metadata?.nombre as string) || '';
-      const apellido = (u.user_metadata?.apellido as string) || '';
-      const correo = u.email || '';
-      const usuario = correo.split('@')[0];
+      if (selectError) throw selectError;
 
-      await supabase.from('perfiles').insert({
-        id: u.id,
-        nombre,
-        apellido,
-        correo,
-        usuario,
-        rol: 'vendedor',
-        estado: 'activo',
-      });
+      // 2. Si no existe, intentar crearlo
+      if (!existing) {
+        const nombre = (u.user_metadata?.nombre as string) || '';
+        const apellido = (u.user_metadata?.apellido as string) || '';
+        const correo = u.email || '';
+        const usuario = correo.split('@')[0];
+
+        const { error: insertError } = await supabase.from('perfiles').insert({
+          id: u.id,
+          nombre,
+          apellido,
+          correo,
+          usuario,
+          rol: 'vendedor', // Rol por defecto
+          estado: 'activo',
+        });
+
+        if (insertError) throw insertError;
+      }
+
+      // 3. Obtener el perfil definitivo
+      const { data: perfilData, error: fetchError } = await supabase
+        .from('perfiles')
+        .select('*')
+        .eq('id', u.id)
+        .maybeSingle();
+
+      if (fetchError) throw fetchError;
+      setPerfil(perfilData as Perfil | null);
+
+    } catch (error) {
+      console.error("Error crítico en ensurePerfil:", error);
+      setPerfil(null);
     }
-
-    const { data: perfilData } = await supabase
-      .from('perfiles')
-      .select('*')
-      .eq('id', u.id)
-      .maybeSingle();
-    setPerfil(perfilData as Perfil | null);
   }
 
   useEffect(() => {
