@@ -15,6 +15,7 @@ import {
   Bike,
   Calculator,
   Settings,
+  Shield, // 👈 NUEVO ICONO para diferenciar del de "Clientes"
 } from 'lucide-react';
 
 type NavItem = { route: Route; label: string; icon: typeof Home; roles: string[] };
@@ -30,6 +31,7 @@ const NAV_ITEMS: NavItem[] = [
   { route: 'facturacion', label: 'Facturación', icon: FileText, roles: ['webmaster', 'admin', 'vendedor'] },
   { route: 'contabilidad', label: 'Contabilidad', icon: Calculator, roles: ['webmaster', 'admin'] },
   { route: 'configuracion', label: 'Configuración', icon: Settings, roles: ['webmaster'] },
+  { route: 'usuarios', label: 'Gestión de Usuarios', icon: Shield, roles: ['webmaster', 'admin'] }, // 👈 LÍNEA NUEVA
   { route: 'perfil', label: 'Perfil', icon: UserIcon, roles: ['webmaster', 'admin', 'vendedor'] },
 ];
 
