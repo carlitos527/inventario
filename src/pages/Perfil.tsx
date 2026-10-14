@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/context/AuthContext';
 import { getAvatarColor, getInitials, formatDate } from '@/lib/utils';
@@ -10,6 +10,14 @@ export default function Perfil() {
   const [apellido, setApellido] = useState(perfil?.apellido ?? '');
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+
+  // ¡AQUÍ ESTÁ LA MAGIA! Sincroniza los inputs cuando el perfil cargue de Supabase
+  useEffect(() => {
+    if (perfil) {
+      setNombre(perfil.nombre ?? '');
+      setApellido(perfil.apellido ?? '');
+    }
+  }, [perfil]);
 
   if (!perfil) {
     return (
