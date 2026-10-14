@@ -16,7 +16,8 @@ export type Route =
   | 'facturacion'
   | 'contabilidad'
   | 'configuracion'
-  | 'perfil';
+  | 'perfil'
+  | 'usuarios'; // 👈 NUEVA RUTA
 
 const PUBLIC_ROUTES: Route[] = ['catalogo', 'carrito', 'login', 'registro'];
 
@@ -39,6 +40,7 @@ const validRoutes: Route[] = [
   'contabilidad',
   'configuracion',
   'perfil',
+  'usuarios', // 👈 NUEVA RUTA VÁLIDA
 ];
 
 export function parseHash(): Route {
