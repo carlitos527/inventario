@@ -14,7 +14,7 @@ export default function Carrito() {
   const [placing, setPlacing] = useState(false);
   const [orderId, setOrderId] = useState<number | null>(null);
 
-  const iva = total * 0.15;
+  const iva = total * 0.19;
   const grandTotal = total + iva;
 
   async function placeOrder() {
@@ -188,7 +188,7 @@ export default function Carrito() {
                 <span className="font-medium">{formatCurrency(total)}</span>
               </div>
               <div className="flex justify-between text-sm text-slate-500 mb-2">
-                <span>IVA (15%)</span>
+                <span>IVA (19%)</span>
                 <span className="font-medium">{formatCurrency(iva)}</span>
               </div>
               <div className="flex justify-between items-center pt-2 border-t border-slate-200">
