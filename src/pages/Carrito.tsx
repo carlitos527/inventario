@@ -14,8 +14,10 @@ export default function Carrito() {
   const [placing, setPlacing] = useState(false);
   const [orderId, setOrderId] = useState<number | null>(null);
 
-  const iva = total * 0.19;
-  const grandTotal = total + iva;
+  // Lógica corregida: El total ya trae el IVA incluido (precio de venta al público)
+  const grandTotal = total; 
+  const subtotalBase = grandTotal / 1.19; // Extraemos la base gravable
+  const iva = grandTotal - subtotalBase; // La diferencia es el IVA
 
   async function placeOrder() {
     setPlacing(true);
@@ -25,7 +27,7 @@ export default function Carrito() {
         cliente_nombre: nombre || 'Consumidor final',
         cliente_telefono: telefono,
         cliente_direccion: requiereDomicilio ? direccion : '',
-        subtotal: total,
+        subtotal: subtotalBase, // Guardamos la base en la BD
         iva,
         total: grandTotal,
         requiere_domicilio: requiereDomicilio,
@@ -39,7 +41,7 @@ export default function Carrito() {
         producto_id: i.producto.id,
         nombre_producto: i.producto.nombre,
         cantidad: i.cantidad,
-        precio_unitario: Number(i.producto.precio),
+        precio_unitario: Number(i.producto.precio), // Este precio ya trae IVA
         subtotal: Number(i.producto.precio) * i.cantidad,
       }));
       await supabase.from('detalle_pedido').insert(detalles);
@@ -181,18 +183,18 @@ export default function Carrito() {
               )}
             </div>
 
-            {/* Totals */}
+            {/* Totals - Actualizado */}
             <div className="bg-white rounded-2xl border border-slate-100 p-5">
               <div className="flex justify-between text-sm text-slate-500 mb-1">
-                <span>Subtotal</span>
-                <span className="font-medium">{formatCurrency(total)}</span>
+                <span>Subtotal (Base)</span>
+                <span className="font-medium">{formatCurrency(subtotalBase)}</span>
               </div>
               <div className="flex justify-between text-sm text-slate-500 mb-2">
-                <span>IVA (19%)</span>
+                <span>IVA (19% incluido)</span>
                 <span className="font-medium">{formatCurrency(iva)}</span>
               </div>
               <div className="flex justify-between items-center pt-2 border-t border-slate-200">
-                <span className="text-lg font-bold text-slate-800">Total</span>
+                <span className="text-lg font-bold text-slate-800">Total a pagar</span>
                 <span className="text-xl font-bold text-sky-600">{formatCurrency(grandTotal)}</span>
               </div>
             </div>
